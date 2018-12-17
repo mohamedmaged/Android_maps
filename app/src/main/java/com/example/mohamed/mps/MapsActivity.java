@@ -1,8 +1,12 @@
 package com.example.mohamed.mps;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -10,6 +14,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -24,6 +29,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
@@ -34,7 +40,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Location location;
     private LatLng tres1;
     private LatLng tres2;
-
+    private   Marker tressure1;
+    private   Marker tressure2;
+    CircleOptions circleOptions2,circleOptions1;
+    public int score=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +51,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         tres1 = new LatLng(30.065147, 31.277741);
         tres2 = new LatLng(30.064590, 31.277667);
+
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -49,7 +59,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Define the criteria how to select the locatioin provider -> use
         // default
         Criteria criteria = new Criteria();
-
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
@@ -138,14 +147,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         double dist1=  location.distanceTo(x);
         if (dist1 < 20){
             Toast.makeText(this, "treasure 1 is found", Toast.LENGTH_SHORT).show();
+            score+=5;
+            tressure1.setVisible(false);
+            circleOptions1.visible(false);
+
         }
         double dist2 = location.distanceTo(y);
         if (dist2 < 20){
             Toast.makeText(this, "treasure 2 is found", Toast.LENGTH_SHORT).show();
+            tressure2.setVisible(false);
+            circleOptions2.visible(false);
+            score+=5;
         }
         //Toast.makeText(getApplicationContext(), "onLocationChanged: " + "Lat : " + lat + "  Long : " + lng, Toast.LENGTH_LONG).show();
-
-
     }
 
     @Override
@@ -164,15 +178,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -194,28 +199,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLng(asu));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(14.0f));
         //addMarkerForFence(asu);
-        addMarkerForFence(tres1);
-        addMarkerForFence(tres2);
-    }
-    public static void addMarkerForFence( LatLng myl){
-
-        mMap.addMarker( new MarkerOptions()
-                .position( new LatLng(myl.latitude, myl.longitude) )
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.tres))
-                .title("Tressure " ));
-
-//Instantiates a new CircleO    ptions object +  center/radius
-        CircleOptions circleOptions = new CircleOptions()
-                .center( myl )
+        tressure1 = mMap.addMarker(new MarkerOptions().  position(tres1).icon(BitmapDescriptorFactory.fromResource(R.drawable.tres)).title("tressure"));
+         tressure2 =mMap.addMarker( new MarkerOptions().position(tres2).icon(BitmapDescriptorFactory.fromResource(R.drawable.tres)).title("tressure"));
+         circleOptions1 = new CircleOptions()
+                .center( tres1 )
                 .radius( 20)
                 .fillColor(0x40ff0000)
                 .strokeColor(Color.TRANSPARENT)
                 .strokeWidth(2);
+         circleOptions2 = new CircleOptions()
+                .center( tres2 )
+                .radius( 20)
+                .fillColor(0x40ff0000)
+                .strokeColor(Color.TRANSPARENT)
+                .strokeWidth(2);
+         mMap.addCircle(circleOptions1);
+        mMap.addCircle(circleOptions2);
+    }
+    @SuppressLint("ValidFragment")
+    public class FireMissilesDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("Congratulations ! You have found all Tressusres and your score is 10")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
 
-// Get back the mutable Circle
-        Circle circle = mMap.addCircle(circleOptions);
-// more operations on the circle...
-
+                        }
+                    })
+                    .setNegativeButton("replay", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            score=0;
+                            tressure1.setVisible(true);
+                            tressure1.setVisible(true);
+                            circleOptions1.visible(true);
+                            circleOptions1.visible(true);
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
     }
 
 }
